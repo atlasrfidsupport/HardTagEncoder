@@ -1,0 +1,43 @@
+﻿<Window x:Class="HardTagEncoder.ReaderSettings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HardTagEncoder"
+        mc:Ignorable="d"
+        Title="Reader Settings" Height="407" Width="733">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="166*"/>
+            <ColumnDefinition Width="559*"/>
+        </Grid.ColumnDefinitions>
+        <Label x:Name="readerModeLabel" Content="Reader Mode:" HorizontalAlignment="Left" Margin="29,27,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="searchModeLabel" Content="Search Mode:" HorizontalAlignment="Left" Margin="29,68,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="sessionLabel" Content="Session:" HorizontalAlignment="Left" Margin="29,108,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="writePowerLabel" Content="Write Power" HorizontalAlignment="Left" Margin="29,154,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="readPowerLabel" Content="Read Power" HorizontalAlignment="Left" Margin="29,204,0,0" VerticalAlignment="Top"/>
+        <Label Content="Show tag data in: " HorizontalAlignment="Left" Margin="29,245,0,0" VerticalAlignment="Top"/>
+        <RadioButton x:Name="hexRadio" Content="Hexadecimal" HorizontalAlignment="Left" Margin="61,322,0,0" VerticalAlignment="Top" IsChecked="True"/>
+        <RadioButton x:Name="asciiRadio" Content="ASCII" HorizontalAlignment="Left" Margin="36,325,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+        <ComboBox x:Name="readerModeCombo" HorizontalAlignment="Left" Margin="146,31,0,0" VerticalAlignment="Top" Width="176" Grid.ColumnSpan="2">
+            <ListBoxItem Content="AutoSet Dense Reader"/>
+            <ListBoxItem/>
+        </ComboBox>
+        <ComboBox x:Name="searchModeCombo" HorizontalAlignment="Left" Margin="146,72,0,0" VerticalAlignment="Top" Width="176" Grid.ColumnSpan="2">
+            <ListBoxItem Content="Dual Target"/>
+            <ListBoxItem Content="Single Target"/>
+        </ComboBox>
+        <ComboBox x:Name="sessionCombo" HorizontalAlignment="Left" Margin="146,112,0,0" VerticalAlignment="Top" Width="176" Grid.ColumnSpan="2">
+            <ListBoxItem Content="Session 0"/>
+            <ListBoxItem Content="Session 1"/>
+            <ListBoxItem Content="Session 2"/>
+            <ListBoxItem Content="Session 3"/>
+        </ComboBox>
+        <Slider x:Name="readPowerSlider" HorizontalAlignment="Left" Margin="144,211,0,0" VerticalAlignment="Top" Width="122" Maximum="30" Minimum="10" TickPlacement="BottomRight" Height="30" IsSnapToTickEnabled="True" Grid.ColumnSpan="2"/>
+        <Slider x:Name="writePowerSlider" HorizontalAlignment="Left" Margin="144,162,0,0" VerticalAlignment="Top" Width="122" Maximum="30" Minimum="10" TickPlacement="BottomRight" Height="34" IsSnapToTickEnabled="True" Grid.ColumnSpan="2"/>
+        <Button x:Name="saveSettingsButton" Content="Save All Settings" HorizontalAlignment="Left" Margin="349,27,0,0" VerticalAlignment="Top" Width="108" Height="32" Grid.Column="1"/>
+        <TextBox x:Name="writePowerText" HorizontalAlignment="Left" Height="18" Margin="105,162,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="51" Grid.Column="1" Text="10 dBm"/>
+        <TextBox x:Name="readPowerText" HorizontalAlignment="Left" Height="18" Margin="105,212,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="51" Grid.Column="1" Text="10 dBm"/>
+
+    </Grid>
+</Window>
