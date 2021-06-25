@@ -30,9 +30,7 @@ namespace HardTagEncoder
 
         public MainWindow()
         {
-            InitializeComponent();
-
-            
+            InitializeComponent();           
         }
 
         //variables
@@ -147,12 +145,30 @@ namespace HardTagEncoder
 
         public void setJadakReadPower(Reader reader, int powerInDb)
         {
-            reader.ParamSet("/reader/radio/readPower", powerInDb);
+            try
+            {
+                reader.ParamSet("/reader/radio/readPower", powerInDb);
+            }
+            catch (Exception e)
+            {
+                reportText.Text = e.Message.ToString() + "; Ensure a reader is connected";
+
+            }
+            
         }
 
         public void setJadakWritePower(Reader reader, int powerInDb)
         {
-            reader.ParamSet("/reader/radio/writePower", powerInDb);
+            try
+            {
+                reader.ParamSet("/reader/radio/writePower", powerInDb);
+            }
+            catch (Exception e)
+            {
+                reportText.Text = e.Message.ToString() + "; Ensure a reader is connected";
+                
+            }
+            
         }
 
         public void setJadakReadDuration(int durationMsec)
@@ -176,9 +192,10 @@ namespace HardTagEncoder
                 }
                 else
                 {
-                    byte[] ba = Encoding.Default.GetBytes(tagData[0].EpcString);
-                    string asciiString = BitConverter.ToString(ba).Replace("-","");
-                    return asciiString;
+                    //byte[] ba = Encoding.Default.GetBytes(tagData[0].EpcString);
+                    //string asciiString = BitConverter.ToString(ba).Replace("-","");
+                    string ascString = ConvertHex(tagData[0].EpcString);
+                    return ascString;
                 }
                 
             }
@@ -189,27 +206,73 @@ namespace HardTagEncoder
             }
         }
 
-        public string readJadakUserMemory(Reader reader)
+        public static string ConvertHex(String hexString)
         {
             try
             {
-                var userReadSuccess = reader.ReadTagMemBytes(null, 3, 0, 24);
-                string hex = BitConverter.ToString(userReadSuccess).Replace("-", "");
-                return hex;
+                string ascii = string.Empty;
+
+                for (int i = 0; i < hexString.Length; i += 2)
+                {
+                    String hs = string.Empty;
+
+                    hs = hexString.Substring(i, 2);
+                    uint decval = System.Convert.ToUInt32(hs, 16);
+                    char character = System.Convert.ToChar(decval);
+                    ascii += character;
+
+                }
+
+                return ascii;
             }
-            catch (Exception e)
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
+
+            return string.Empty;
+        }
+
+        public string readJadakUserMemory(Reader reader)
+        {
+            
             {
-                reportText.Text = e.Message.ToString();
-                throw;
+                try
+                {
+                    byte[] userReadSuccess = reader.ReadTagMemBytes(null, 3, 0, 16);
+                    string hex = BitConverter.ToString(userReadSuccess).Replace("-", "");
+                    if (hexRadio.IsChecked == true)
+                    {
+                        return hex;
+                    }
+                    else
+                    {
+                        string ascString = ConvertHex(hex);
+                        return ascString;
+                    }
+                        
+                }
+                catch (Exception e)
+                {
+                    reportText.Text = e.Message.ToString();
+                    return e.Message.ToString();
+                }
             }
+            
+            
             
         }
 
         public string readJadakTIDMemory(Reader reader)
         {
-            var tidReadSuccess = reader.ReadTagMemBytes(null, 2, 0, 24);
-            string hex = BitConverter.ToString(tidReadSuccess).Replace("-", "");
-            return hex;
+            try
+            {
+                var tidReadSuccess = reader.ReadTagMemBytes(null, 2, 0, 24);
+                string hex = BitConverter.ToString(tidReadSuccess).Replace("-", "");
+                return hex;
+            }
+            catch (Exception ex)
+            {
+                reportText.Text = ex.Message.ToString();
+                return "";
+            } 
         }
 
         public bool writeJadakTag(Reader reader, TagFilter filter, Gen2.WriteTag tagOp)
@@ -226,6 +289,11 @@ namespace HardTagEncoder
                     reportText.Text = "Unable to write tag; Error: " + e.ToString();
                     return false;
                 }
+            catch (Exception exc)
+            {
+                reportText.Text = exc.Message.ToString();
+                return false;
+            }
    
         }
 
@@ -240,6 +308,11 @@ namespace HardTagEncoder
             catch (ReaderException e)
             {
                 messageText = "Unable to write tag; Error: " + e.ToString();
+                return false;
+            }
+            catch (Exception exc)
+            {
+                reportText.Text = exc.Message.ToString();
                 return false;
             }
         }
@@ -268,21 +341,52 @@ namespace HardTagEncoder
                 TagFilter filter = null;
                 string epc = writeText.Text;
                 var strs = Enumerable.Range(0,epc.Length/2).Select(i=>epc.Substring(i*2,2));
+                
                 byte[] epcBytes = new byte[strs.ToString().Length];
 
-                try
+                if(hexRadio.IsChecked == true)
                 {
-                    epcBytes = strs.Select(s => Convert.ToByte($"0x{s}", 16)).ToArray();
+                    try
+                    {
+                        epcBytes = strs.Select(s => Convert.ToByte($"0x{s}", 16)).ToArray();
+                    }
+                    catch (System.FormatException err)
+                    {
+                        reportText.Text = "No Tag Writes; Error: " + err.Message;
+                        reportText.Background = Brushes.Yellow;
+                        System.Threading.Thread.Sleep(500);
+                        reportText.Background = Brushes.Red;
+                        //writeText.Text = "";
+                        writeText.Focus();
+                    }
                 }
-                catch (System.FormatException err)
+                else
                 {
-                    reportText.Text = "No Tag Writes; Error: " + err.Message;
-                    reportText.Background = Brushes.Yellow;
-                    System.Threading.Thread.Sleep(500);
-                    reportText.Background = Brushes.Red;
-                    //writeText.Text = "";
-                    writeText.Focus();
+                    try
+                    {
+                        char[] charValues = epc.ToCharArray();
+                        string hexOutput = "";
+                        foreach (char _eachChar in charValues)
+                        {
+                            // Get the integral value of the character.
+                            int value = Convert.ToInt32(_eachChar);
+                            // Convert the decimal value to a hexadecimal value in string form.
+                            hexOutput += String.Format("{0:X}", value);                          
+                        }
+                        var asciiStrs = Enumerable.Range(0, epc.Length).Select(i => hexOutput.Substring(i * 2, 2));
+                        epcBytes = asciiStrs.Select(s => Convert.ToByte($"0x{s}", 16)).ToArray();
+                    }
+                    catch (System.FormatException err)
+                    {
+                        reportText.Text = "No Tag Writes; Error: " + err.Message;
+                        reportText.Background = Brushes.Yellow;
+                        System.Threading.Thread.Sleep(500);
+                        reportText.Background = Brushes.Red;
+                        //writeText.Text = "";
+                        writeText.Focus();
+                    }
                 }
+                
                  
                 
                 Gen2.TagData epcData = new Gen2.TagData(epcBytes);
@@ -364,8 +468,43 @@ namespace HardTagEncoder
                 }
                 else
                 {
+                    if(hexRadio.IsChecked == false)
+                    {
+                        try
+                        {
+                            char[] charValues = epc.ToCharArray();
+                            string hexOutput = "";
+                            foreach (char _eachChar in charValues)
+                            {
+                                // Get the integral value of the character.
+                                int value = Convert.ToInt32(_eachChar);
+                                // Convert the decimal value to a hexadecimal value in string form.
+                                hexOutput += String.Format("{0:X}", value);
+                            }
+                            var asciiStrs = Enumerable.Range(0, epc.Length).Select(i => hexOutput.Substring(i * 2, 2));
+                            epcBytes = asciiStrs.Select(s => Convert.ToByte($"0x{s}", 16)).ToArray();
+                        }
+                        catch (System.FormatException err)
+                        {
+                            reportText.Text = "No Tag Writes; Error: " + err.Message;
+                            reportText.Background = Brushes.Yellow;
+                            System.Threading.Thread.Sleep(500);
+                            reportText.Background = Brushes.Red;
+                            //writeText.Text = "";
+                            writeText.Focus();
+                        }
+                    }
                     ushort[] userData = new ushort[writeText.Text.Length];
-                    int j = 0;
+                    int j;
+                    if(hexRadio.IsChecked == true)
+                    {
+                         j = userData.Length / 4;
+                    }
+                    else
+                    {
+                         j = userData.Length / 2;
+                    }
+                    
                     if (BitConverter.IsLittleEndian)
                     {
                         Array.Reverse(epcBytes);
@@ -373,9 +512,12 @@ namespace HardTagEncoder
                     for (int i = 0; i < epcBytes.Length - 1; i = i+2)
                     {
                         
-                        userData[j] = BitConverter.ToUInt16(epcBytes, i);
-                        j++;
+                        userData[j-1] = BitConverter.ToUInt16(epcBytes, i);
+                        j--;
                     }
+                    //var temp = userData[0];
+                    //userData[0] = userData[1];
+                    //userData[1] = temp;
                     Gen2.WriteData tagOpUser = new Gen2.WriteData(Gen2.Bank.USER, 0, userData);
                     
                     try
@@ -383,10 +525,9 @@ namespace HardTagEncoder
                         var success = writeJadakTagUser(JadakReader, filter, tagOpUser);
                         if (success == true)
                         {
-                            messageText = "Write Successful";
-                            reportText.Background = Brushes.Yellow;
-                            System.Threading.Thread.Sleep(500);
+                            messageText = "Write Successful";                           
                             reportText.Background = Brushes.Green;
+                            reportText.Text = "USER Write Successful: " + epc;
                             writeText.Text = "";
                             writeText.Focus();
                             if (isDatabaseUsed == true)
@@ -445,6 +586,14 @@ namespace HardTagEncoder
                         reportText.Background = Brushes.Red;
                         //writeText.Text = "";
                     }
+                    catch (IndexOutOfRangeException exce)
+                    {
+                        reportText.Text = exce.Message.ToString();
+                    }
+                    catch (ReaderException excep)
+                    {
+                        reportText.Text = excep.Message.ToString();
+                    }
 
                 }
                 
@@ -460,11 +609,16 @@ namespace HardTagEncoder
                     {
                         System.Windows.MessageBox.Show("Please provide an Access Password to lock tags");
                     }
+                    else if (passwordText.Text.Length != 8)
+                    {
+                        System.Windows.MessageBox.Show("Access Password must be 8 characters in length");
+                    }
                     else
                     {
-                        uint password = 0x41022400;
-                        ushort[] array = { 0x4102, 0x2400 };
-
+                        uint password = Convert.ToUInt32(passwordText.Text);
+                        string pass1 = passwordText.Text.Substring(0, 4);
+                        string pass2 = passwordText.Text.Substring(4, 4);
+                        ushort[] array = { Convert.ToUInt16(pass1), Convert.ToUInt16(pass2) };
                         Gen2.WriteData accessPWDTagOp = new Gen2.WriteData(Gen2.Bank.RESERVED, 2, array);
                         Gen2.Lock lockTagOp = new Gen2.Lock(password, Gen2.LockAction.EPC_LOCK);
                         try
@@ -477,6 +631,11 @@ namespace HardTagEncoder
                         {
                             System.Windows.MessageBox.Show("Lock Tag failed; Error: " + ex.ToString());
                         }
+                        catch (Exception exc)
+                        {
+                            reportText.Text = exc.Message.ToString();
+                        }
+
                     }
                     
 
@@ -489,10 +648,16 @@ namespace HardTagEncoder
                     {
                         System.Windows.MessageBox.Show("Please provide the Access Password to unlock tags");
                     }
+                    else if(passwordText.Text.Length != 8)
+                    {
+                        System.Windows.MessageBox.Show("Access Password must be 8 characters in length");
+                    }
                     else
                     {
-                        uint password = 0x41022400;
-                        ushort[] array = { 0x4102, 0x2400 };
+                        uint password = Convert.ToUInt32(passwordText.Text);
+                        string pass1 = passwordText.Text.Substring(0, 4);
+                        string pass2 = passwordText.Text.Substring(4, 4);
+                        ushort[] array = { Convert.ToUInt16(pass1), Convert.ToUInt16(pass2) };
                         Gen2.WriteData accessPWDTagOp = new Gen2.WriteData(Gen2.Bank.RESERVED, 2, array);
                         Gen2.Lock lockTagOp = new Gen2.Lock(password, Gen2.LockAction.EPC_UNLOCK);
                         try
@@ -505,6 +670,12 @@ namespace HardTagEncoder
                         {
                             System.Windows.MessageBox.Show("Lock Tag failed; Error: " + ex.ToString());
                         }
+                        catch (Exception exc)
+                        {
+                            reportText.Text = exc.Message.ToString();
+                        }
+
+                        
                     }
 
                     
@@ -680,7 +851,7 @@ namespace HardTagEncoder
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.InitialDirectory = "c:\\";
-                openFileDialog.Filter = "Excel files (*.xls;*.xlsx)|*.xls;*.xlsx|All files (*.*)|*.*";
+                openFileDialog.Filter = "Excel files (*.xls;*.xlsx)|*.xls;*.xlsx";
                 openFileDialog.FilterIndex = 1;
                 openFileDialog.RestoreDirectory = true;
                 openFileDialog.FileName = filePath;
@@ -725,7 +896,16 @@ namespace HardTagEncoder
 
         public void updateExcelData(Microsoft.Office.Interop.Excel.Worksheet xlWorksheet, int dataSelector)
         {
-            writeText.Text = xlWorkSheet.Cells[dataSelector + 1, 1].value;
+            try
+            {
+                writeText.Text = xlWorkSheet.Cells[dataSelector + 1, 1].value;
+            }
+            catch (Exception e)
+            {
+
+                reportText.Text = e.Message.ToString();
+            }
+            
         }
 
         private void databaseRecordText_TextChanged(object sender, TextChangedEventArgs e)
@@ -735,7 +915,15 @@ namespace HardTagEncoder
 
         private void updateDbButton_Click(object sender, RoutedEventArgs e)
         {
-            updateExcelData(xlWorkSheet, int.Parse(databaseRecordText.Text));
+            try
+            {
+                updateExcelData(xlWorkSheet, int.Parse(databaseRecordText.Text));
+            }
+            catch (Exception ex)
+            {
+                reportText.Text = ex.Message.ToString();
+            }
+            
         }
 
         private void helpButton_Click(object sender, RoutedEventArgs e)
@@ -743,7 +931,7 @@ namespace HardTagEncoder
             try
             {
                 //open Help page
-                System.Diagnostics.Process.Start("url");
+                System.Diagnostics.Process.Start("https://support.atlasrfidstore.com/article/61-using-the-vulcan-tag-encoder");
             }
             catch (Exception)
             {
@@ -751,6 +939,11 @@ namespace HardTagEncoder
                 
             }
             
+        }
+
+        private void asciiRadio_Checked(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

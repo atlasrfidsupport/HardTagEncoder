@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:HardTagEncoder"
         xmlns:Properties="clr-namespace:HardTagEncoder.Properties" x:Name="myMainWindow" x:Class="HardTagEncoder.MainWindow"
         mc:Ignorable="d"
-        Title="Vulcan Tag Encoder" Height="471.471" Width="831.01">
+        Title="Vulcan RFID™ UHF Tag Read &amp; Write Software" Height="471.471" Width="831.01" Icon="Square44x44Logo.altform-unplated_targetsize-256.ico">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="55*"/>
@@ -90,7 +90,7 @@
                     <Label x:Name="readPowerLabel" Content="Read Power" HorizontalAlignment="Left" Margin="17,204,0,0" VerticalAlignment="Top" Grid.Column="1"/>
                     <Label Content="Show tag data in: " HorizontalAlignment="Left" Margin="17,261,0,40" VerticalAlignment="Top" Height="26" Grid.Column="1"/>
                     <RadioButton x:Name="hexRadio" Content="Hexadecimal" HorizontalAlignment="Left" Margin="134,267,0,0" VerticalAlignment="Top" IsChecked="True" Grid.ColumnSpan="2" Height="15" Grid.Column="1"/>
-                    <RadioButton x:Name="asciiRadio" Content="ASCII" HorizontalAlignment="Left" Margin="72,267,0,0" VerticalAlignment="Top" Grid.Column="2" Grid.ColumnSpan="2"/>
+                    <RadioButton x:Name="asciiRadio" Content="ASCII" HorizontalAlignment="Left" Margin="72,267,0,0" VerticalAlignment="Top" Grid.Column="2" Grid.ColumnSpan="2" Checked="asciiRadio_Checked"/>
                     <ComboBox x:Name="readerModeCombo" HorizontalAlignment="Left" Margin="134,31,0,0" VerticalAlignment="Top" Width="176" Grid.ColumnSpan="3" SelectionChanged="readerModeCombo_SelectionChanged" SelectedIndex="0" IsEnabled="False" Grid.Column="1">
                         <ListBoxItem Content="M = 1 (Highest Read Count)"/>
                         <ListBoxItem/>
